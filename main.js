@@ -1,30 +1,30 @@
 {
   let d = document;
-  let video = 0;
+  let video;
   let track;
-  let { max, min } = Math;
   let getVideo = () => {
-    if (video = d.fullscreenElement || d.scrollingElement) {
-      if (!(video instanceof HTMLVideoElement)) {
-        let videos = video.getElementsByTagName("video");
-        let maxVisibleSize = 0;
-        let i = 0;
-        while (i < videos.length) {
-          let _video = videos[i];
-          if (_video.readyState) {
-            let rect = _video.getBoundingClientRect();
-            let visibleSize = max(min(rect.right, innerWidth) - max(rect.x, 0), 0) * max(min(rect.bottom, innerHeight) - max(rect.y, 0), 0);
-            maxVisibleSize < visibleSize && (
-              maxVisibleSize = visibleSize,
-              video = _video
-            );
-          }
-          ++i;
+    if (!((video = d.fullscreenElement || d.scrollingElement) instanceof HTMLVideoElement)) {
+      let videos = video.getElementsByTagName("video");
+      let wndW = innerWidth;
+      let wndH = innerHeight;
+      let maxVisibleSize = 0;
+      let i = videos.length;
+      while (i) {
+        let _video = videos[--i];
+        if (_video.readyState) {
+          let { right, x, bottom, y } = _video.getBoundingClientRect();        
+          let visibleW = (right < wndW ? right : wndW) - (x < 0 ? 0 : x);
+          let visibleH = (bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y);
+          let visibleSize = visibleW * visibleH;
+          maxVisibleSize < visibleSize && (
+            maxVisibleSize = visibleSize,
+            video = _video
+          );
         }
-        video?.readyState || (video = video.shadowRoot?.querySelector("video"));
       }
-      video?.readyState ? (track = video.addTextTrack("subtitles")).mode = "showing" : video = 0;
+      video?.readyState || (video = video.shadowRoot?.querySelector("video"));
     }
+    video?.readyState ? (track = video.addTextTrack("subtitles")).mode = "showing" : video = 0;
     return video;
   }
   if (getVideo()) {
@@ -73,7 +73,17 @@
     let addCue = delta => {
       cue &&= (track.removeCue(cue), 0);
       let pbr = video.playbackRate;
-      track.addCue(cue = new VTTCue(0, 2147483647, (video.playbackRate = (delta < 0 ? min(((pbr + .055) * 20 ^ 0) / 20, 5) : max(((pbr - .055) * 20 ^ 0) / 20, .1))) + "x"));
+      track.addCue(
+        cue = new VTTCue(
+          0,
+          2147483647,
+          (video.playbackRate =
+            delta < 0
+              ? (pbr = ((pbr + .055) * 20 ^ 0) / 20) < 5 ? pbr : 5
+              : (pbr = ((pbr - .055) * 20 ^ 0) / 20) < .1 ? .1 : pbr
+          ) + "x"
+        )
+      );
       clearTimeout(timer2);
       return timer2 = setTimeout(() => cue &&= (track.removeCue(cue), 0), 2000);
     }
@@ -91,7 +101,7 @@
             : k == 190 ? .03333333333333333
             : k == 188 && -.03333333333333333;
           t ? (e.preventDefault(), k > 39 && video.pause(), video.currentTime += t)
-            : (t = k == 38 ? .1 : k == 40 && -.1) && (video.volume = min(max(video.volume + t, 0), 1));
+            : (t = k == 38 ? .1 : k == 40 && -.1) && (video.volume = (k = video.volume + t) < 0 ? 0 : k < 1 ? k : 1);
         }
         return !0;
       }

@@ -131,7 +131,7 @@
               : (!listener || innerWidth == fullscreenWidth && innerHeight == fullscreenHeight)
                 && ((video || getVideo()) && observer.observe(video), addEventListener)
           ) &&
-          video != 0 && (
+          video == 0 || (
             listener("contextmenu", onContextMenu, 1),
             listener("keydown", onKeyDown, 1),
             listener("mousedown", onMouseDown, 1),

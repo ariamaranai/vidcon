@@ -36,7 +36,8 @@
     let onContextMenu = e =>
       showContextMenu || e.stopImmediatePropagation(e.preventDefault());
     let onFocusIn = e =>
-      !(e.target instanceof HTMLVideoElement) || (e.target.blur(e.preventDefault()));
+      e.target == video && video.blur(e.preventDefault());
+
     let onMouseDown = e => {
       let button = e.button;
       return button > 1 && (

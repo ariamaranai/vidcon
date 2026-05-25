@@ -7,25 +7,22 @@
       let videos = video.getElementsByTagName("video");
       let wndW = innerWidth;
       let wndH = innerHeight;
-      let maxVisibleSize = 0;
+      let maxVisibleSize = video = 0;
       let i = videos.length;
       while (i) {
         let _video = videos[--i];
-        if (_video.readyState) {
-          let { right, x, bottom, y } = _video.getBoundingClientRect();        
-          let visibleW = (right < wndW ? right : wndW) - (x < 0 ? 0 : x);
-          let visibleH = (bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y);
-          let visibleSize = visibleW * visibleH;
-          maxVisibleSize < visibleSize && (
-            maxVisibleSize = visibleSize,
-            video = _video
-          );
-        }
+        let { right, x, bottom, y } = _video.getBoundingClientRect();
+        let visibleW = (right < wndW ? right : wndW) - (x < 0 ? 0 : x);
+        let visibleH = (bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y);
+        let visibleSize = visibleW * visibleH;
+        maxVisibleSize < visibleSize && (
+          maxVisibleSize = visibleSize,
+          video = _video
+        );
       }
-      video?.readyState || (video = video.shadowRoot?.querySelector("video"));
+      (video ||= video.shadowRoot?.querySelector("video") || 0);
     }
-    video?.readyState ? (track = video.addTextTrack("subtitles")).mode = "showing" : video = 0;
-    return video;
+    return video ? ((track = video.addTextTrack("subtitles")).mode = "showing", video) : video = 0;
   }
   if (getVideo()) {
     let cue;
@@ -36,7 +33,10 @@
     let timer2;
     let rightClick;
     let showContextMenu;
-    let onContextMenu = e => showContextMenu || e.stopImmediatePropagation(e.preventDefault());
+    let onContextMenu = e =>
+      showContextMenu || e.stopImmediatePropagation(e.preventDefault());
+    let onFocusIn = e =>
+      !(e.target instanceof HTMLVideoElement) || (e.target.blur(e.preventDefault()));
     let onMouseDown = e => {
       let button = e.button;
       return button > 1 && (
@@ -65,10 +65,36 @@
     let onWheel = e => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      let delta = Math.sign(e.deltaY);
-      return rightClick
-        ? video.style.filter = "brightness(" + (brightness -= delta) + "%) contrast(" + (contrast += delta) + "%)"
-        : addCue(delta);
+      let delta = e.deltaY;
+      let ctrlKey = e.ctrlKey;
+      if (ctrlKey) {
+        let objectFit = video.style.objectFit;
+        let scale = video.style.scale;
+        if (delta < 0) {
+          if (objectFit != "none") {
+            let videoWidth = video.videoWidth;
+            let videoHeight = video.videoHeight;
+            if (innerWidth < videoWidth || innerHeight < videoHeight)
+              return video.style.objectFit = "none";
+          }
+          video.style.scale = (scale = scale ? +scale + .1 : 1.1);
+          video.style.setProperty("--scale", 1 / scale);
+        } else if (scale) {
+          if ((scale = +scale) <= 1.01) {
+            video.style.objectFit =
+            video.style.scale = "";
+            video.style.removeProperty("--scale");
+          } else {
+            video.style.scale = (scale -= .1);
+            video.style.setProperty("--scale", 1 / scale);
+          }
+        }
+      } else {
+        rightClick
+          ? video.style.filter = "brightness(" + (brightness -= (delta = delta < 0 ? -1 : 1)) + "%) contrast(" + (contrast += delta) + "%)"
+          : addCue(delta);
+      }
+      return 0;
     }
     let addCue = delta => {
       cue &&= (track.removeCue(cue), 0);
@@ -108,6 +134,7 @@
       onmousedown = onMouseDown;
       onmouseup = onMouseUp;
       addEventListener("wheel", onWheel, { passive: !1 });
+      addEventListener("focusin", onFocusIn, 1);;
     } else {
       chrome.runtime.sendMessage(null, ({ width: fullscreenWidth, height: fullscreenHeight }) => {
         let onKeyDown = e => {
@@ -137,7 +164,8 @@
             listener("mousedown", onMouseDown, 1),
             listener("mouseup", onMouseUp, 1),
             listener("wheel", onWheel, { capture: !0, passive: !1 }),
-            listener("ratechange", onRateChange, 1)
+            listener("ratechange", onRateChange, 1),
+            listener("focusin", onFocusIn, 1)
           );
         });
         observer.observe(video);

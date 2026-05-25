@@ -1,0 +1,10 @@
+::-webkit-scrollbar {
+  display: none !important
+}
+video {
+  --scale: 1;
+  width: 100% !important
+}
+video::-webkit-media-controls {
+  scale: var(--scale)
+}

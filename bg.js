@@ -1,9 +1,9 @@
 chrome.runtime.onMessage.addListener((m, s, r) => {
   m ?? chrome.system.display.getInfo(infos => r(infos[0].bounds));
   let tabId = s.tab.id;
-  let title = " ";
+  let title;
   chrome.action.disable(tabId);
-  chrome.action.setIcon({ tabId, path: m ? (title = "kbdvid", "off.png") : "on.png" });
+  chrome.action.setIcon({ tabId, path: m ? (title = "vidcon", "off.png") : (title = " " , "on.png") });
   chrome.action.setTitle({ tabId, title });
   return !0;
 });
@@ -12,11 +12,17 @@ chrome.runtime.onMessage.addListener((m, s, r) => {
     let tabId = a.id;
     return chrome.action.getTitle({ tabId }, async title => {
       try {
-        title == "kbdvid" &&
-        await chrome.scripting.executeScript({
-          target: { tabId, allFrames: !0 },
-          files: ["main.js"]
-        });
+        let target = { tabId, allFrames: !0 };
+        title == "vidcon" && (
+          await chrome.scripting.insertCSS({
+            target,
+            files: ["main.css"]
+          }),
+          await chrome.scripting.executeScript({
+            target,
+            files: ["main.js"]
+          })
+        )
       } catch {}
     })
   }
@@ -32,6 +38,7 @@ chrome.runtime.onMessage.addListener((m, s, r) => {
       scripts.length || (
         chrome.scripting.registerContentScripts([{
           id: "0",
+          css: ["main.css"],
           js: ["main.js"],
           matches: ["https://*/*.mp4*", "file://*.mp4*"],
           runAt: "document_end"

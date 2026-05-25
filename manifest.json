@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "kbdvid",
+  "name": "vidcon",
   "version": "0",
-  "description": "Enable keyboard shortcuts for video",
+  "description": "Video controller",
   "icons": {
     "128": "off.png"
   },

@@ -92,7 +92,7 @@
         }
       } else {
         rightClick
-          ? video.style.filter = "brightness(" + (brightness -= (delta = delta < 0 ? -1 : 1)) + "%) contrast(" + (contrast += delta) + "%)"
+          ? video.style.filter = "brightness(" + (brightness -= (delta = delta < 0 ? -1 : 1)) + "%)contrast(" + (contrast += delta) + "%)"
           : addCue(delta);
       }
       return 0;

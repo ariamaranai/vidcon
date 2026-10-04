@@ -3,7 +3,7 @@
   let video;
   let track;
   let getVideo = () => {
-    if ((video = d.fullscreenElement || d.scrollingElement)?.localName != "video") {
+    if ((video = d.fullscreenElement || d.scrollingElement)?.localName !== "video") {
       let videos = video.getElementsByTagName("video");
       let wndW = innerWidth;
       let wndH = innerHeight;
@@ -11,12 +11,9 @@
       let i = videos.length;
       while (i) {
         let _video = videos[--i];
-        let { right, x, bottom, y } = _video.getBoundingClientRect();
-        let visibleW = (right < wndW ? right : wndW) - (x < 0 ? 0 : x);
-        let visibleH = (bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y);
-        let visibleSize = visibleW * visibleH;
-        maxVisibleSize < visibleSize && (
-          maxVisibleSize = visibleSize,
+        let { right: $0, x, bottom, y } = _video.getBoundingClientRect();
+        maxVisibleSize < ($0 = (($0 < wndW ? $0 : wndW) - (x < 0 ? 0 : x)) * ((bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y))) && (
+          maxVisibleSize = $0,
           video = _video
         );
       }
@@ -33,11 +30,8 @@
     let timer2;
     let rightClick;
     let showContextMenu;
-    let onContextMenu = e =>
-      showContextMenu || e.stopImmediatePropagation(e.preventDefault());
-    let onFocusIn = e =>
-      e.target == video && video.blur(e.preventDefault());
-
+    let onContextMenu = e => showContextMenu || e.stopImmediatePropagation(e.preventDefault());
+    let onFocusIn = e => e.target === video && video.blur(e.preventDefault());
     let onMouseDown = e => {
       let button = e.button;
       return button > 1 && (
@@ -52,7 +46,7 @@
       rightClick &&= (showContextMenu = performance.now() - rightClick < 300, 0)
     );
     let onMouseHold = button => {
-      if (!(rightClick = button == 2 && performance.now())) {
+      if (!(rightClick = button === 2 && performance.now())) {
         let t = video.playbackRate * (button < 4 ? -5 : 5);
         video.currentTime += t;
         timer1 = -1;
@@ -72,7 +66,7 @@
         let objectFit = video.style.objectFit;
         let scale = video.style.scale;
         if (delta < 0) {
-          if (objectFit != "none") {
+          if (objectFit !== "none") {
             let videoWidth = video.videoWidth;
             let videoHeight = video.videoHeight;
             if (innerWidth < videoWidth || innerHeight < videoHeight)
@@ -113,21 +107,21 @@
       clearTimeout(timer2);
       return timer2 = setTimeout(() => cue &&= (track.removeCue(cue), 0), 2000);
     }
-    if (d.head?.childElementCount == 1) {
+    if (d.head?.childElementCount === 1) {
       chrome.runtime.sendMessage(0);
       oncontextmenu = onContextMenu;
       onkeydown = e => {
         let k = e.keyCode;
-        if (k == 122 && !d.fullscreenElement)
+        if (k === 122 && !d.fullscreenElement)
           video.requestFullscreen(e.preventDefault());
         else {
           let t =
-              k == 39 ? video.playbackRate * 5
-            : k == 37 ? video.playbackRate * -5
-            : k == 190 ? .03333333333333333
-            : k == 188 && -.03333333333333333;
+              k === 39 ? video.playbackRate * 5
+            : k === 37 ? video.playbackRate * -5
+            : k === 190 ? .03333333333333333
+            : k === 188 && -.03333333333333333;
           t ? (e.preventDefault(), k > 39 && video.pause(), video.currentTime += t)
-            : (t = k == 38 ? .1 : k == 40 && -.1) && (video.volume = (k = video.volume + t) < 0 ? 0 : k < 1 ? k : 1);
+            : (t = k === 38 ? .1 : k === 40 && -.1) && (video.volume = (k = video.volume + t) < 0 ? 0 : k < 1 ? k : 1);
         }
         return !0;
       }
@@ -139,10 +133,10 @@
       chrome.runtime.sendMessage(null, ({ width: fullscreenWidth, height: fullscreenHeight }, listener) => {
         let onKeyDown = e => {
           let k = e.keyCode;
-          let t = k == 39 ? video.playbackRate * 5
-                : k == 37 ? video.playbackRate * -5
-                : k == 190 ? .03333333333333333
-                : k == 188 && -.03333333333333333;
+          let t = k === 39 ? video.playbackRate * 5
+                : k === 37 ? video.playbackRate * -5
+                : k === 190 ? .03333333333333333
+                : k === 188 && -.03333333333333333;
           return !t || (
             e.stopImmediatePropagation(e.preventDefault()),
             k > 39 && video.pause(),
@@ -152,12 +146,12 @@
         let onRateChange = e => e.stopImmediatePropagation();
         let observer = new ResizeObserver(() => {
           return (listener =
-            listener == addEventListener
+            listener === addEventListener
               ? (video = observer.unobserve(video), chrome.runtime.sendMessage(1), removeEventListener)
-              : (!listener || innerWidth == fullscreenWidth && innerHeight == fullscreenHeight)
+              : (!listener || innerWidth === fullscreenWidth && innerHeight === fullscreenHeight)
                 && ((video || getVideo()) && observer.observe(video), addEventListener)
           ) &&
-          video == 0 || (
+          video === 0 || (
             listener("contextmenu", onContextMenu, 1),
             listener("keydown", onKeyDown, 1),
             listener("mousedown", onMouseDown, 1),

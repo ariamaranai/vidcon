@@ -1,168 +1,128 @@
 {
   let d = document;
+  let style = d.createElement("style");
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center}video::-webkit-media-controls{scale:var(--x)}";
   let video;
-  let track;
+  let textTrack;
   let getVideo = () => {
-    if ((video = d.fullscreenElement || d.scrollingElement)?.localName !== "video") {
-      let videos = video.getElementsByTagName("video");
-      let wndW = innerWidth;
-      let wndH = innerHeight;
-      let maxVisibleSize = video = 0;
+    let fullscreenElement = d.fullscreenElement;
+    if (!fullscreenElement)
+      return;
+    let shadowRoot;
+    if (fullscreenElement.localName === "video")
+      video = fullscreenElement;
+    else {
+      let videos = fullscreenElement.getElementsByTagName("video");
+      (shadowRoot = fullscreenElement.shadowRoot) && (
+        (shadowRoot = shadowRoot.querySelectorAll("video")).length &&
+        (videos = [...videos, ...shadowRoot])
+      );
+      let maxSize = 0;
+      let size = 0;
       let i = videos.length;
-      while (i) {
-        let _video = videos[--i];
-        let { right: $0, x, bottom, y } = _video.getBoundingClientRect();
-        maxVisibleSize < ($0 = (($0 < wndW ? $0 : wndW) - (x < 0 ? 0 : x)) * ((bottom < wndH ? bottom : wndH) - (y < 0 ? 0 : y))) && (
-          maxVisibleSize = $0,
-          video = _video
+      while (i)
+        (maxSize < (size = (element = videos[--i]).offsetWidth * element.offsetHeight)) && (
+          maxSize = size,
+          video = element
         );
-      }
-      (video ||= video.shadowRoot?.querySelector("video") || 0);
     }
-    return video ? ((track = video.addTextTrack("subtitles")).mode = "showing", video) : video = 0;
+    return video && (
+      ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style),
+      (textTrack = video.addTextTrack("subtitles")).mode = "showing"
+    );
   }
   if (getVideo()) {
+    let onRateChange = e => e.stopImmediatePropagation();
+    let onContextMenu = e => e.stopImmediatePropagation(e.preventDefault());
+    let scale;
     let cue;
-    let brightness = 100;
-    let contrast = 100;
-    let timer0;
-    let timer1;
-    let timer2;
-    let rightClick;
-    let showContextMenu;
-    let onContextMenu = e => showContextMenu || e.stopImmediatePropagation(e.preventDefault());
-    let onFocusIn = e => e.target === video && video.blur(e.preventDefault());
-    let onMouseDown = e => {
-      let button = e.button;
-      return button > 1 && (
-        e.preventDefault(),
-        onMouseHold(button)
-      );
-    }
-    let onMouseUp = e => (
-      e.button > 2 && e.preventDefault(),
-      timer0 &&= clearTimeout(timer0),
-      timer1 &&= clearInterval(timer1),
-      rightClick &&= (showContextMenu = performance.now() - rightClick < 300, 0)
-    );
-    let onMouseHold = button => {
-      if (!(rightClick = button === 2 && performance.now())) {
-        let t = video.playbackRate * (button < 4 ? -5 : 5);
-        video.currentTime += t;
-        timer1 = -1;
-        timer0 = setTimeout(() => (
-          video.currentTime += t,
-          timer1 &&= setInterval(() => video.currentTime += t, 127)),
-          500
-        );
-      }
-    }
+    let removeCueTimer;
     let onWheel = e => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      let delta = e.deltaY;
-      let ctrlKey = e.ctrlKey;
-      if (ctrlKey) {
-        let objectFit = video.style.objectFit;
-        let scale = video.style.scale;
-        if (delta < 0) {
-          if (objectFit !== "none") {
-            let videoWidth = video.videoWidth;
-            let videoHeight = video.videoHeight;
-            if (innerWidth < videoWidth || innerHeight < videoHeight)
-              return video.style.objectFit = "none";
-          }
-          video.style.scale = (scale = scale ? +scale + .1 : 1.1);
-          video.style.setProperty("--scale", 1 / scale);
-        } else if (scale) {
-          if ((scale = +scale) <= 1.01) {
-            video.style.objectFit =
-            video.style.scale = "";
-            video.style.removeProperty("--scale");
-          } else {
-            video.style.scale = (scale -= .1);
-            video.style.setProperty("--scale", 1 / scale);
-          }
-        }
+      cue &&= (textTrack.removeCue(cue), 0);
+      let delta = e.deltaY < 0;
+      let vttText;
+      if (e.ctrlKey) {
+        let videoStyle = video.style;
+        videoStyle.scale =
+          delta
+            ? (videoStyle.setProperty("--x", 100 / scale), vttText = (scale = scale ? scale + 10 : 110) + "%")
+            : (scale = +scale) < 111
+            ? (videoStyle.removeProperty("--x"), vttText = "100%",  "")
+            : (videoStyle.setProperty("--x", 100 / scale), vttText = (scale -= 10) + "%");
       } else {
-        rightClick
-          ? video.style.filter = "brightness(" + (brightness -= (delta = delta < 0 ? -1 : 1)) + "%)contrast(" + (contrast += delta) + "%)"
-          : addCue(delta);
-      }
-    }
-    let addCue = delta => {
-      cue &&= (track.removeCue(cue), 0);
-      let pbr = video.playbackRate;
-      track.addCue(
-        cue = new VTTCue(
-          0,
-          2147483647,
-          (video.playbackRate =
-            delta < 0
+        let pbr = video.playbackRate;
+        vttText = (
+          video.playbackRate =
+            delta
               ? (pbr = ((pbr + .055) * 20 ^ 0) / 20) < 5 ? pbr : 5
               : (pbr = ((pbr - .055) * 20 ^ 0) / 20) < .1 ? .1 : pbr
-          ) + "x"
-        )
-      );
-      clearTimeout(timer2);
-      return timer2 = setTimeout(() => cue &&= (track.removeCue(cue), 0), 2000);
-    }
-    if (d.head?.childElementCount === 1) {
-      chrome.runtime.sendMessage(0);
-      oncontextmenu = onContextMenu;
-      onkeydown = e => {
-        let k = e.keyCode;
-        if (k === 122 && !d.fullscreenElement)
-          video.requestFullscreen(e.preventDefault());
-        else {
-          let t =
-              k === 39 ? video.playbackRate * 5
-            : k === 37 ? video.playbackRate * -5
-            : k === 190 ? .03333333333333333
-            : k === 188 && -.03333333333333333;
-          t ? (e.preventDefault(), k > 39 && video.pause(), video.currentTime += t)
-            : (t = k === 38 ? .1 : k === 40 && -.1) && (video.volume = (k = video.volume + t) < 0 ? 0 : k < 1 ? k : 1);
-        }
-        return !0;
+        ) + "x";
+        clearTimeout(removeCueTimer);
+        (removeCueTimer = setTimeout(() => cue &&= (textTrack.removeCue(cue), 0), 2000), !1);
       }
-      onmousedown = onMouseDown;
-      onmouseup = onMouseUp;
-      addEventListener("wheel", onWheel, { passive: !1 });
-      addEventListener("focusin", onFocusIn, 1);;
-    } else {
-      chrome.runtime.sendMessage(null, ({ width: fullscreenWidth, height: fullscreenHeight }, listener) => {
-        let onKeyDown = e => {
-          let k = e.keyCode;
-          let t = k === 39 ? video.playbackRate * 5
-                : k === 37 ? video.playbackRate * -5
-                : k === 190 ? .03333333333333333
-                : k === 188 && -.03333333333333333;
-          return !t || (
-            e.stopImmediatePropagation(e.preventDefault()),
-            k > 39 && video.pause(),
-            video.currentTime += t
-          )
-        }
-        let onRateChange = e => e.stopImmediatePropagation();
-        let observer = new ResizeObserver(() => {
-          return (listener =
-            listener === addEventListener
-              ? (video = observer.unobserve(video), chrome.runtime.sendMessage(1), removeEventListener)
-              : (!listener || innerWidth === fullscreenWidth && innerHeight === fullscreenHeight)
-                && ((video || getVideo()) && observer.observe(video), addEventListener)
-          ) &&
-          video === 0 || (
-            listener("contextmenu", onContextMenu, 1),
-            listener("keydown", onKeyDown, 1),
-            listener("mousedown", onMouseDown, 1),
-            listener("mouseup", onMouseUp, 1),
-            listener("wheel", onWheel, { capture: 1, passive: 0 }),
-            listener("ratechange", onRateChange, 1),
-            listener("focusin", onFocusIn, 1)
-          );
-        });
-        observer.observe(video);
-      });
+      textTrack.addCue(cue = new VTTCue(0, 2e9, vttText));
+      return !1;
     }
+    let delayHoldTimer;
+    let mouseHoldIntervalTimer;
+    let onMouseDown = e => {
+      let button = e.button;
+      if (button < 3)
+      return !1;
+      e.preventDefault();
+      delayHoldTimer && clearTimeout(delayHoldTimer);
+      mouseHoldIntervalTimer && clearInterval(mouseHoldIntervalTimer);
+      mouseHoldIntervalTimer = 0;
+      let t = video.playbackRate * (button === 3 ? -5 : 5);
+      video.currentTime += t;
+      delayHoldTimer = setTimeout(() => (
+        video.currentTime += t,
+        mouseHoldIntervalTimer === 0 && (
+          mouseHoldIntervalTimer = setInterval(() => video.currentTime += t, 127)
+        )
+      ), 500);
+    }
+    let onMouseUp = e =>
+      e.button > 2 && (
+        e.preventDefault(),
+        delayHoldTimer &&= (clearTimeout(delayHoldTimer), 0),
+        mouseHoldIntervalTimer &&= (clearInterval(mouseHoldIntervalTimer), 0)
+      );
+    let onKeyDown = e => {
+      let keyCode = e.keyCode;
+      let t = keyCode === 39 ? video.currentTime += video.playbackRate * 5
+            : keyCode === 37 ? video.currentTime += video.playbackRate * -5
+            : keyCode === 190 ? video.pause(video.currentTime += .03333333333333333)
+            : keyCode === 188 ? video.pause(video.currentTime -= .03333333333333333)
+            : keyCode === 38 ? (video.muted ||= 1, video.volume = (keyCode = video.volume + .1) < 1 ? keyCode : 1)
+            : keyCode === 40 && (video.muted ||= 1, video.volume = (keyCode = video.volume - .1) < 0 ? 0 : keyCode)
+      return !t || e.stopImmediatePropagation(e.preventDefault());
+    }
+    let onFocusIn = e => e.target === video && video.blur(e.preventDefault());
+    let onFullscreenChange = e => {
+      (e =
+        (!e || getVideo())
+          ? addEventListener
+          : (style.remove(), removeEventListener)
+      )("ratechange", onRateChange, 1);
+      e("contextmenu", onContextMenu, 1);
+      e("wheel", onWheel, { capture: 1, passive: 0 });
+      e("mousedown", onMouseDown, 1);
+      e("mouseup", onMouseUp, 1);
+      e("keydown", onKeyDown, 1);
+      e("focusin", onFocusIn, 1);
+    }
+    onFullscreenChange();
+    addEventListener("fullscreenchange", onFullscreenChange, 1);
+
+  /*
+    let brightness = 100;
+    let contrast = 100;
+    let onWheel = e => {
+          ? video.style.filter = "brightness(" + (brightness -= (delta = delta < 0 ? -1 : 1)) + "%)contrast(" + (contrast += delta) + "%)"
+    }
+  */
   }
 }

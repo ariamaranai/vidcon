@@ -8,7 +8,7 @@
   },
   "permissions": [
     "scripting",
-    "system.display",
+    "storage",
     "tabs"
   ],
   "host_permissions": [

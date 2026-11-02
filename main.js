@@ -86,7 +86,7 @@ L: {
     mouseHoldIntervalTimer = 0;
     let t = video.playbackRate * (button === 3 ? -5 : 5);
     video.currentTime += t;
-    delayHoldTimer = setTimeout(() => (
+    return delayHoldTimer = setTimeout(() => (
       video.currentTime += t,
       mouseHoldIntervalTimer === 0 && (
         mouseHoldIntervalTimer = setInterval(() => video.currentTime += t, 127)
@@ -99,7 +99,7 @@ L: {
       delayHoldTimer &&= (clearTimeout(delayHoldTimer), 0),
       mouseHoldIntervalTimer &&= (clearInterval(mouseHoldIntervalTimer), 0)
     );
-  let lastTimeStamp;
+  let lastTimeStamp = 0;
   let onKeyDown = e => {
     let timeStamp = e.timeStamp;
     if (timeStamp === lastTimeStamp)
@@ -116,22 +116,25 @@ L: {
     return !t || e.stopImmediatePropagation(e.preventDefault());
   }
   let onFullscreenChange = e => (
-    e = (!e || getVideo())
-      ? addEventListener
-      : (
-        videoStyle.removeProperty("--x"),
-        style.remove(),
-        video.controls = scale = 100,
-        delete vidcon.vidcon,
-        removeEventListener
-      ),
-    e("ratechange", onRateChange, 1),
-    e("contextmenu", onContextMenu, 1),
-    e("wheel", onWheel, { capture: 1, passive: 0 }),
-    e("mousedown", onMouseDown, 1),
-    e("mouseup", onMouseUp, 1),
-    e("keydown", onKeyDown, 1)
+    (e && e.timeStamp === lastTimeStamp) || (
+      (e = (!e || (lastTimeStamp = e.timeStamp, getVideo()))
+        ? addEventListener
+        : (
+          videoStyle.removeProperty("--x"),
+          style.remove(),
+          video.controls = scale = 100,
+          delete vidcon.vidcon,
+          removeEventListener
+        )
+      )("ratechange", onRateChange, 1),
+      e("contextmenu", onContextMenu, 1),
+      e("wheel", onWheel, { capture: 1, passive: 0 }),
+      e("mousedown", onMouseDown, 1),
+      e("mouseup", onMouseUp, 1),
+      e("keydown", onKeyDown, 1)
+    )
   );
   onFullscreenChange();
   addEventListener("fullscreenchange", onFullscreenChange, 1);
+  addEventListener("webkitfullscreenchange", onFullscreenChange, 1);
 }

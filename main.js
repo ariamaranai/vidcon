@@ -1,7 +1,7 @@
 {
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center}video::-webkit-media-controls{scale:var(--x)}";
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center}video::-webkit-media-controls{scale:var(--x)}video::cue{background-color:#0000;font-size:calc(16px * var(--x));text-box-trim:trim-both;line-height:2}";
   let video;
   let textTrack;
   let getVideo = () => {
@@ -34,7 +34,7 @@
   if (getVideo()) {
     let onRateChange = e => e.stopImmediatePropagation();
     let onContextMenu = e => e.stopImmediatePropagation(e.preventDefault());
-    let scale;
+    let scale = 100;
     let cue;
     let removeCueTimer;
     let onWheel = e => {
@@ -47,10 +47,10 @@
         let videoStyle = video.style;
         videoStyle.scale =
           delta
-            ? (videoStyle.setProperty("--x", 100 / scale), vttText = (scale = scale ? scale + 10 : 110) + "%")
+            ? (videoStyle.setProperty("--x", 100 / (scale += 10)), vttText = scale + "%")
             : (scale = +scale) < 111
             ? (videoStyle.removeProperty("--x"), vttText = "100%",  "")
-            : (videoStyle.setProperty("--x", 100 / scale), vttText = (scale -= 10) + "%");
+            : (videoStyle.setProperty("--x", 100 / (scale -= 10)), vttText = scale + "%");
       } else {
         let pbr = video.playbackRate;
         vttText = (
@@ -59,10 +59,13 @@
               ? (pbr = ((pbr + .055) * 20 ^ 0) / 20) < 5 ? pbr : 5
               : (pbr = ((pbr - .055) * 20 ^ 0) / 20) < .1 ? .1 : pbr
         ) + "x";
-        clearTimeout(removeCueTimer);
-        (removeCueTimer = setTimeout(() => cue &&= (textTrack.removeCue(cue), 0), 2000), !1);
       }
-      textTrack.addCue(cue = new VTTCue(0, 2e9, vttText));
+      cue =new VTTCue(0, 2e9, vttText);
+      cue.snapToLines = !1;
+      cue.line = 48;
+      textTrack.addCue(cue);
+      clearTimeout(removeCueTimer);
+      (removeCueTimer = setTimeout(() => cue &&= (textTrack.removeCue(cue), 0), 800), !1);
       return !1;
     }
     let delayHoldTimer;
@@ -101,19 +104,25 @@
       return !t || e.stopImmediatePropagation(e.preventDefault());
     }
     let onFocusIn = e => e.target === video && video.blur(e.preventDefault());
-    let onFullscreenChange = e => {
+    let onFullscreenChange = e => (
       (e =
         (!e || getVideo())
           ? addEventListener
-          : (style.remove(), removeEventListener)
-      )("ratechange", onRateChange, 1);
-      e("contextmenu", onContextMenu, 1);
-      e("wheel", onWheel, { capture: 1, passive: 0 });
-      e("mousedown", onMouseDown, 1);
-      e("mouseup", onMouseUp, 1);
-      e("keydown", onKeyDown, 1);
-      e("focusin", onFocusIn, 1);
-    }
+          : (
+            video.style.removeProperty("--x"),
+            video.style.scale = "",
+            scale = 100,
+            style.remove(),
+            removeEventListener
+          )
+      )("ratechange", onRateChange, 1),
+      e("contextmenu", onContextMenu, 1),
+      e("wheel", onWheel, { capture: 1, passive: 0 }),
+      e("mousedown", onMouseDown, 1),
+      e("mouseup", onMouseUp, 1),
+      e("keydown", onKeyDown, 1),
+      e("focusin", onFocusIn, 1)
+    );
     onFullscreenChange();
     addEventListener("fullscreenchange", onFullscreenChange, 1);
 

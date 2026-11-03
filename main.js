@@ -6,6 +6,7 @@ L: {
   style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}::cue{background-color:#0000;font-size:calc(16px * var(--x));line-height:2}";
   let video;
   let videoStyle;
+  let controls;
   let textTrack;
   let getVideo = () => {
     let fullscreenElement = d.fullscreenElement;
@@ -32,6 +33,7 @@ L: {
     return video && (
       self.vidcon = 1,
       videoStyle = video.style,
+      controls = video.controls,
       ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style),
       (textTrack = video.addTextTrack("subtitles")).mode = "showing"
     );
@@ -112,7 +114,7 @@ L: {
           : keyCode === 188 ? video.pause(video.currentTime -= .03333333333333333)
           : keyCode === 38 ? (video.muted &&= 0, video.volume = (keyCode = video.volume + .1) < 1 ? keyCode : 1)
           : keyCode === 40 ? (video.muted &&= 0, video.volume = (keyCode = video.volume - .1) < 0 ? 0 : keyCode)
-          : keyCode === 46 && (video.controls ? video.removeAttribute("controls") : video.controls = 1)
+          : keyCode === 46 && controls && (video.removeAttribute("controls"))
     return !t || e.stopImmediatePropagation(e.preventDefault());
   }
   let onFullscreenChange = e => (
@@ -122,7 +124,8 @@ L: {
         : (
           videoStyle.removeProperty("--x"),
           style.remove(),
-          video.controls = scale = 100,
+          controls && (video.controls = 1),
+          scale = 100,
           delete vidcon.vidcon,
           removeEventListener
         )

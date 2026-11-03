@@ -110,8 +110,8 @@ L: {
           : keyCode === 37 ? video.currentTime += video.playbackRate * -5
           : keyCode === 190 ? video.pause(video.currentTime += .03333333333333333)
           : keyCode === 188 ? video.pause(video.currentTime -= .03333333333333333)
-          : keyCode === 38 ? (video.muted ||= 1, video.volume = (keyCode = video.volume + .1) < 1 ? keyCode : 1)
-          : keyCode === 40 ? (video.muted ||= 1, video.volume = (keyCode = video.volume - .1) < 0 ? 0 : keyCode)
+          : keyCode === 38 ? (video.muted &&= 0, video.volume = (keyCode = video.volume + .1) < 1 ? keyCode : 1)
+          : keyCode === 40 ? (video.muted &&= 0, video.volume = (keyCode = video.volume - .1) < 0 ? 0 : keyCode)
           : keyCode === 46 && (video.controls ? video.removeAttribute("controls") : video.controls = 1)
     return !t || e.stopImmediatePropagation(e.preventDefault());
   }

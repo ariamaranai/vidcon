@@ -157,7 +157,7 @@ L: {
         ? addEventListener
         : (
           removeEventListener("mousemove", onMouseMove, 1),
-          videoStyle.translate = "",
+          videoStyle.translate = videoStyle.scale = "",
           videoStyle.removeProperty("--x"),
           style.remove(),
           controls && (video.controls = 1),

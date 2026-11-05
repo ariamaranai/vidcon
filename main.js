@@ -3,7 +3,7 @@ L: {
     break L;
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center;transition-property:translate,scale;transition-duration:.1s}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}::cue{background-color:#0000;font-size:calc(16px * var(--x));line-height:2}";
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center;transition-property:translate,scale}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}::cue{background-color:#0000;font-size:calc(16px * var(--x));line-height:2}";
   let video;
   let videoStyle;
   let controls;
@@ -45,6 +45,8 @@ L: {
   let mouseDownY = 0;
   let translateX = 0;
   let translateY = 0;
+  let centerX = screen.width / 2;
+  let centerY = screen.height / 2;
   let border = screen.height * .8;
   let scale = 100;
   let scaleFactor = 0;
@@ -115,10 +117,12 @@ L: {
       !1
     );
   }
-  let onMouseMove = e =>
+  let onMouseMove = e => (
     videoStyle.translate =
       (translateX += (e.x - mouseDownX) * scaleFactor) + "px " +
-      (translateY += (e.y - mouseDownY) * scaleFactor) + "px";
+      (translateY += (e.y - mouseDownY) * scaleFactor) + "px",
+    videoStyle.transformOrigin = (centerX - translateX / 2) + "px " + (centerY - translateY / 2) + "px "
+  );
   let onMouseUp = e => {
     let button = e.button;
     return button
@@ -158,7 +162,9 @@ L: {
         ? addEventListener
         : (
           removeEventListener("mousemove", onMouseMove, 1),
-          videoStyle.translate = videoStyle.scale = "",
+          videoStyle.scale =
+          videoStyle.translate =
+          videoStyle.transformOrigin = "",
           videoStyle.removeProperty("--x"),
           style.remove(),
           controls && (video.controls = 1),

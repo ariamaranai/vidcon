@@ -123,6 +123,7 @@ L: {
     let button = e.button;
     return button
       ? button > 2 && (
+        e.preventDefault(),
         e.stopImmediatePropagation(),
         removeEventListener("mousemove", onMouseMove, 1),
         delayHoldTimer &&= (clearTimeout(delayHoldTimer), 0),

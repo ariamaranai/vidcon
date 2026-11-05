@@ -3,11 +3,11 @@ L: {
     break L;
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center;transition-property:translate,scale}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}::cue{background-color:#0000;font-size:calc(16px * var(--x));line-height:2}";
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center;transition-property:translate,scale}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}__{position:fixed!important;inset:50%!important;z-index:2147483647!important;width:max-content!important;height:20px!important;font:400+14px/20px bahnschrift!important;color:#fff!important;translate:-50%;pointer-events:none!important;user-select:none!important}";
+  let tooltip = d.createElement("__");
   let video;
   let videoStyle;
   let controls;
-  let textTrack;
   let getVideo = () => {
     let fullscreenElement = d.fullscreenElement;
     if (!fullscreenElement)
@@ -35,7 +35,7 @@ L: {
       videoStyle = video.style,
       controls = video.controls,
       ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style),
-      (textTrack = video.addTextTrack("subtitles")).mode = "showing"
+      d.documentElement.appendChild(tooltip)
     );
   }
   if (!getVideo())
@@ -50,8 +50,7 @@ L: {
   let border = screen.height * .8;
   let scale = 100;
   let scaleFactor = 0;
-  let cue;
-  let removeCueTimer;
+  let tooltipHiddenTimer = 0;
   let delayHoldTimer;
   let mouseHoldIntervalTimer;
   let onRateChange = e => e.stopImmediatePropagation();
@@ -63,31 +62,39 @@ L: {
   let onWheel = e => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    cue &&= (textTrack.removeCue(cue), 0);
     let delta = e.deltaY < 0;
-    let vttText;
     if (e.ctrlKey) {
-      videoStyle.scale =
+      tooltip.textContent =
         delta
-          ? (videoStyle.setProperty("--x", 100 / (scale += 10)), vttText = scale + "%")
+          ? (
+            videoStyle.setProperty("--x", 100 / (scale += 10)),
+            videoStyle.scale = scale + "%"
+          )
           : (scale = +scale) < 111
-            ? (videoStyle.removeProperty("--x"), vttText = "100%",  "")
-            : (videoStyle.setProperty("--x", 100 / (scale -= 10)), vttText = scale + "%");
+            ? (
+              videoStyle.removeProperty("--x"),
+              videoStyle.scale = ""
+            )
+            : (
+              videoStyle.setProperty("--x", 100 / (scale -= 10)),
+              videoStyle.scale = scale + "%"
+            );
       scaleFactor = 10 / scale;
     } else {
       let pbr = video.playbackRate;
-      vttText = (
+      tooltip.textContent = (
         video.playbackRate =
           delta
             ? (pbr = ((pbr + .055) * 20 ^ 0) / 20) < 5 ? pbr : 5
             : (pbr = ((pbr - .055) * 20 ^ 0) / 20) < .1 ? .1 : pbr
       ) + "x";
     }
-    (cue = new VTTCue(0, 2e9, vttText)).snapToLines = !1;
-    cue.line = 48;
-    textTrack.addCue(cue);
-    clearTimeout(removeCueTimer);
-    (removeCueTimer = setTimeout(() => cue &&= (textTrack.removeCue(cue), 0), 800), !1);
+    tooltip.hidden = 0;
+    tooltipHiddenTimer && clearTimeout(tooltipHiddenTimer);
+    tooltipHiddenTimer = setTimeout(() => (
+      tooltip.hidden = "until-found",
+      tooltipHiddenTimer = 0
+    ), 800);
     return !1;
   }
   let onMouseDown = e => {
@@ -121,7 +128,9 @@ L: {
     videoStyle.translate =
       (translateX += (e.x - mouseDownX) * scaleFactor) + "px " +
       (translateY += (e.y - mouseDownY) * scaleFactor) + "px",
-    videoStyle.transformOrigin = (centerX - translateX / 2) + "px " + (centerY - translateY / 2) + "px "
+    videoStyle.transformOrigin =
+      (centerX - translateX / 2) + "px " +
+      (centerY - translateY / 2) + "px"
   );
   let onMouseUp = e => {
     let button = e.button;
@@ -156,7 +165,7 @@ L: {
           : keyCode === 46 && controls && (video.removeAttribute("controls"))
     return !t || e.stopImmediatePropagation(e.preventDefault());
   }
-  let onFullscreenChange = e => (
+  let onFullscreenChange = e =>
     (e && e.timeStamp === lastTimeStamp) || (
       (e = (!e || (lastTimeStamp = e.timeStamp, getVideo()))
         ? addEventListener
@@ -167,6 +176,7 @@ L: {
           videoStyle.transformOrigin = "",
           videoStyle.removeProperty("--x"),
           style.remove(),
+          tooltip.remove(),
           controls && (video.controls = 1),
           scale = 100,
           scaleFactor = translateX = translateY = 0,
@@ -179,8 +189,7 @@ L: {
       e("mousedown", onMouseDown, 1),
       e("mouseup", onMouseUp, 1),
       e("keydown", onKeyDown, 1)
-    )
-  );
+    );
   onFullscreenChange();
   addEventListener("fullscreenchange", onFullscreenChange, 1);
   addEventListener("webkitfullscreenchange", onFullscreenChange, 1);

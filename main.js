@@ -3,8 +3,19 @@ L: {
     break L;
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:1;width:100%;transform-origin:center;transition-property:translate,scale}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{scale:var(--x)}__{position:fixed!important;inset:50%!important;z-index:2147483647!important;width:max-content!important;height:20px!important;font:400+14px/20px bahnschrift!important;color:#fff!important;translate:-50%;pointer-events:none!important;user-select:none!important}";
-  let tooltip = d.createElement("__");
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:0;--y:0;--z:1;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:var(--z)!important;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:var(--z)!important}";
+  let dpr = devicePixelRatio;
+  let cvsBuf = {};
+  let cvs = new OffscreenCanvas(dpr * 50, dpr * 16);
+  let ctx = cvs.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.font = "600 20px bahnschrift";
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "#000";
+  ctx.shadowBlur =
+  ctx.shadowOffsetX =
+  ctx.shadowOffsetY = 1;
   let video;
   let videoStyle;
   let controls;
@@ -34,8 +45,7 @@ L: {
       self.vidcon = 1,
       videoStyle = video.style,
       controls = video.controls,
-      ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style),
-      d.documentElement.appendChild(tooltip)
+      ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style)
     );
   }
   if (!getVideo())
@@ -46,11 +56,11 @@ L: {
   let translateX = 0;
   let translateY = 0;
   let centerX = screen.width / 2;
-  let centerY = screen.height / 2;
-  let border = screen.height * .8;
+  let centerY = screen.height;
+  let border = centerY * .8;
+  centerY /= 2;
   let scale = 100;
-  let scaleFactor = 0;
-  let tooltipHiddenTimer = 0;
+  let cursorSwitchTimer = 0;
   let delayHoldTimer;
   let mouseHoldIntervalTimer;
   let onRateChange = e => e.stopImmediatePropagation();
@@ -62,39 +72,30 @@ L: {
   let onWheel = e => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    let delta = e.deltaY < 0;
-    if (e.ctrlKey) {
-      tooltip.textContent =
-        delta
-          ? (
-            videoStyle.setProperty("--x", 100 / (scale += 10)),
-            videoStyle.scale = scale + "%"
-          )
-          : (scale = +scale) < 111
-            ? (
-              videoStyle.removeProperty("--x"),
-              videoStyle.scale = ""
-            )
-            : (
-              videoStyle.setProperty("--x", 100 / (scale -= 10)),
-              videoStyle.scale = scale + "%"
-            );
-      scaleFactor = 10 / scale;
-    } else {
-      let pbr = video.playbackRate;
-      tooltip.textContent = (
-        video.playbackRate =
-          delta
-            ? (pbr = ((pbr + .055) * 20 ^ 0) / 20) < 5 ? pbr : 5
-            : (pbr = ((pbr - .055) * 20 ^ 0) / 20) < .1 ? .1 : pbr
-      ) + "x";
-    }
-    tooltip.hidden = 0;
-    tooltipHiddenTimer && clearTimeout(tooltipHiddenTimer);
-    tooltipHiddenTimer = setTimeout(() => (
-      tooltip.hidden = "until-found",
-      tooltipHiddenTimer = 0
-    ), 800);
+    ctx.clearRect(0, 0, 64, 16);
+    let $0 = e.deltaY < 0;
+    let text =
+      e.ctrlKey
+        ? $0
+          ? (videoStyle.setProperty("--z", $0 = (scale += 5) + "%"), $0)
+          : (scale = +scale) < 106
+            ? (videoStyle.removeProperty("--z"), "")
+            : (videoStyle.setProperty("--z", $0 = (scale -= 5) + "%"), $0)
+        : (video.playbackRate =
+          $0
+            ? ($0 = ((($0 = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? $0 : 5
+            : ($0 = ((($0 = video.playbackRate) - .055) * 20 ^ 0) / 20) < .1 ? .1 : $0
+        ) + "x";
+    let url = cvsBuf[text];
+    url
+      ? videoStyle.cursor = url
+      : (
+        console.log(ctx.measureText(text)),
+        ctx.fillText(text, 25, 15),
+        cvs.convertToBlob().then(r => videoStyle.cursor = cvsBuf[text] = "url(" + URL.createObjectURL(r) + ")+0+0,auto")
+      );
+    cursorSwitchTimer && clearTimeout(cursorSwitchTimer);
+    cursorSwitchTimer = setTimeout(() => videoStyle.cursor = "", 1000);
     return !1;
   }
   let onMouseDown = e => {
@@ -124,14 +125,14 @@ L: {
       !1
     );
   }
-  let onMouseMove = e => (
-    videoStyle.translate =
-      (translateX += (e.x - mouseDownX) * scaleFactor) + "px " +
-      (translateY += (e.y - mouseDownY) * scaleFactor) + "px",
+  let onMouseMove = e => {
+    let factor = 5 / scale;
+    videoStyle.setProperty("--x", translateX += (e.x - mouseDownX) * factor),
+    videoStyle.setProperty("--y", translateY += (e.y - mouseDownY) * factor),
     videoStyle.transformOrigin =
       (centerX - translateX / 2) + "px " +
       (centerY - translateY / 2) + "px"
-  );
+  }
   let onMouseUp = e => {
     let button = e.button;
     return button
@@ -139,8 +140,9 @@ L: {
         e.preventDefault(),
         e.stopImmediatePropagation(),
         removeEventListener("mousemove", onMouseMove, 1),
-        delayHoldTimer &&= (clearTimeout(delayHoldTimer), 0),
-        mouseHoldIntervalTimer &&= (clearInterval(mouseHoldIntervalTimer), 0),
+        clearTimeout(delayHoldTimer),
+        clearInterval(mouseHoldIntervalTimer),
+        delayHoldTimer = mouseHoldIntervalTimer = 0,
         !1
       )
       : scale > 100 && e.y < border && (
@@ -171,15 +173,15 @@ L: {
         ? addEventListener
         : (
           removeEventListener("mousemove", onMouseMove, 1),
-          videoStyle.scale =
-          videoStyle.translate =
-          videoStyle.transformOrigin = "",
+          videoStyle.transformOrigin =
+          videoStyle.cursor = "",
           videoStyle.removeProperty("--x"),
+          videoStyle.removeProperty("--y"),
+          videoStyle.removeProperty("--z"),
           style.remove(),
-          tooltip.remove(),
           controls && (video.controls = 1),
           scale = 100,
-          scaleFactor = translateX = translateY = 0,
+          video = translateX = translateY = 0,
           delete vidcon.vidcon,
           removeEventListener
         )

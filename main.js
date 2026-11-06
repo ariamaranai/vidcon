@@ -90,7 +90,6 @@ L: {
     url
       ? videoStyle.cursor = url
       : (
-        console.log(ctx.measureText(text)),
         ctx.fillText(text, 25, 15),
         cvs.convertToBlob().then(r => videoStyle.cursor = cvsBuf[text] = "url(" + URL.createObjectURL(r) + ")+0+0,auto")
       );

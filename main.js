@@ -133,22 +133,19 @@ L: {
       (centerY - translateY / 2) + "px"
   }
   let onMouseUp = e => {
+    removeEventListener("mousemove", onMouseMove, 1);
     let button = e.button;
-    return button
-      ? button > 2 && (
+    return (button
+      ? button > 2 (
         e.preventDefault(),
         e.stopImmediatePropagation(),
-        removeEventListener("mousemove", onMouseMove, 1),
         clearTimeout(delayHoldTimer),
         clearInterval(mouseHoldIntervalTimer),
-        delayHoldTimer = mouseHoldIntervalTimer = 0,
-        !1
+        delayHoldTimer = mouseHoldIntervalTimer = 0
       )
-      : scale > 100 && e.y < border && (
-        e.stopImmediatePropagation(),
-        removeEventListener("mousemove", onMouseMove, 1),
-        !1
-      );
+      : scale > 100 && e.y < border && e.stopImmediatePropagation(),
+      !1
+    );
   }
   let lastTimeStamp = 0;
   let onKeyDown = e => {

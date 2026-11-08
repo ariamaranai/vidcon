@@ -60,14 +60,13 @@ L: {
     e.preventDefault();
     e.stopImmediatePropagation();
     cue &&= (textTrack.removeCue(cue), 0);
-    let $0 = e.deltaY < 0;
     let text =
       e.ctrlKey
-        ? (videoStyle.setProperty("--z", scale = $0 ? scale + 5 : scale < 106 ? 100 : scale - 5), scale + "%")
+        ? (videoStyle.setProperty("--z", scale = e.deltaY < 0 ? scale + 5 : scale < 106 ? 100 : scale - 5), scale + "%")
         : (video.playbackRate =
-          $0
-            ? ($0 = ((($0 = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? $0 : 5
-            : ($0 = ((($0 = video.playbackRate) - .055) * 20 ^ 0) / 20) < .1 ? .1 : $0
+          e.deltaY < 0
+            ? (e = (((e = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? e : 5
+            : (e = (((e = video.playbackRate) - .055) * 20 ^ 0) / 20) < .1 ? .1 : e
         ) + "x";
     (cue = new VTTCue(0, 2e9, text)).snapToLines = 0;
     cue.line = 48;

@@ -63,12 +63,9 @@ L: {
   let cursorSwitchTimer = 0;
   let delayHoldTimer;
   let mouseHoldIntervalTimer;
+  let isMouseMoving;
   let onRateChange = e => e.stopImmediatePropagation();
-  let onContextMenu = e => (
-    e.stopImmediatePropagation(),
-    e.preventDefault(),
-    e.x === mouseDownX && e.y === mouseDownY
-  );
+  let onContextMenu = e => e.stopImmediatePropagation();
   let onWheel = e => {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -101,9 +98,10 @@ L: {
     let button = e.button;
     if (!button)
       return scale > 100 && border > (mouseDownY = e.y) && (
+        isMouseMoving = 1,
         e.stopImmediatePropagation(),
         mouseDownX = e.x,
-        addEventListener("mousemove", onMouseMove, 1),
+        addEventListener("mousemove", onMouseMove, isMouseMoving = 1),
         !1
       );
     else if (button < 3)
@@ -133,20 +131,24 @@ L: {
       (centerY - translateY / 2) + "px"
   }
   let onMouseUp = e => {
-    removeEventListener("mousemove", onMouseMove, 1);
     let button = e.button;
-    return (button
-      ? button > 2 (
+    return button
+      ? button > 2 && (
         e.preventDefault(),
-        e.stopImmediatePropagation(),
         clearTimeout(delayHoldTimer),
         clearInterval(mouseHoldIntervalTimer),
-        delayHoldTimer = mouseHoldIntervalTimer = 0
+        delayHoldTimer = mouseHoldIntervalTimer = 0,
+        !1
       )
-      : scale > 100 && e.y < border && e.stopImmediatePropagation(),
-      !1
-    );
+      : (scale < 101 && e.y > border) || (e.stopImmediatePropagation(), !1)
   }
+  let onClick = e =>
+    isMouseMoving &&= (
+      removeEventListener("mousemove", onMouseMove, 1),
+      e.preventDefault(),
+      e.stopImmediatePropagation(),
+      0
+    );
   let lastTimeStamp = 0;
   let onKeyDown = e => {
     let timeStamp = e.timeStamp;
@@ -177,7 +179,7 @@ L: {
           style.remove(),
           controls && (video.controls = 1),
           scale = 100,
-          video = translateX = translateY = 0,
+          video = translateX = translateY = isMouseMoving = 0,
           delete vidcon.vidcon,
           removeEventListener
         )
@@ -186,6 +188,7 @@ L: {
       e("wheel", onWheel, { capture: 1, passive: 0 }),
       e("mousedown", onMouseDown, 1),
       e("mouseup", onMouseUp, 1),
+      e("click", onClick, 1),
       e("keydown", onKeyDown, 1)
     );
   onFullscreenChange();

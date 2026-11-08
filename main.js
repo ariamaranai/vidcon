@@ -3,22 +3,11 @@ L: {
     break L;
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:0;--y:0;--z:1;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:var(--z)!important;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:var(--z)!important}";
-  let dpr = devicePixelRatio;
-  let buf = {};
-  let cvs = new OffscreenCanvas(dpr * 50, dpr * 16);
-  let ctx = cvs.getContext("2d");
-  ctx.scale(dpr, dpr);
-  ctx.font = "600+20px bahnschrift";
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.shadowColor = "#000";
-  ctx.shadowBlur =
-  ctx.shadowOffsetX =
-  ctx.shadowOffsetY = 1;
+  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:0;--y:0;--z:100;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:calc(var(--z) / 100)!important;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:var(--z)!important}::cue{background-color:#0000!important;font-size:calc(16px / (var(--z) / 100))!important;line-height:2!important}";
   let video;
   let videoStyle;
   let controls;
+  let textTrack;
   let getVideo = () => {
     let fullscreenElement = d.fullscreenElement;
     if (!fullscreenElement)
@@ -45,7 +34,8 @@ L: {
       self.vidcon = 1,
       videoStyle = video.style,
       controls = video.controls,
-      ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style)
+      ((shadowRoot && shadowRoot.contains(video)) ? shadowRoot : d.head ?? d.documentElement).appendChild(style),
+      (textTrack = video.addTextTrack("subtitles")).mode = "showing"
     );
   }
   if (!getVideo())
@@ -60,33 +50,30 @@ L: {
   let border = centerY * .8;
   centerY /= 2;
   let scale = 100;
-  let cursorSwitchTimer = 0;
+  let cue;
+  let removeCueTimer;
   let delayHoldTimer;
   let mouseHoldIntervalTimer;
   let mouseDownInZoom;
   let onRateChange = e => e.stopImmediatePropagation();
   let onWheel = e => {
-    ctx.clearRect(0, 0, 64, 16);
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    cue &&= (textTrack.removeCue(cue), 0);
     let $0 = e.deltaY < 0;
     let text =
       e.ctrlKey
-        ? (videoStyle.setProperty("--z", $0 = $0 ? (scale += 5) + "%" : scale < 106 ? "100%" : (scale -= 5) + "%"), $0)
+        ? (videoStyle.setProperty("--z", scale = $0 ? scale + 5 : scale < 106 ? 100 : scale - 5), scale + "%")
         : (video.playbackRate =
           $0
             ? ($0 = ((($0 = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? $0 : 5
             : ($0 = ((($0 = video.playbackRate) - .055) * 20 ^ 0) / 20) < .1 ? .1 : $0
         ) + "x";
-    let url = buf[text];
-    url
-      ? videoStyle.cursor = url
-      : (
-        ctx.fillText(text, 25, 15),
-        cvs.convertToBlob().then(r => videoStyle.cursor = buf[text] = "url(" + URL.createObjectURL(r) + ")+0+0,auto")
-      );
-    cursorSwitchTimer && clearTimeout(cursorSwitchTimer);
-    cursorSwitchTimer = setTimeout(() => videoStyle.cursor = "", 1000);
-    e.preventDefault();
-    return e.stopImmediatePropagation();
+    (cue = new VTTCue(0, 2e9, text)).snapToLines = 0;
+    cue.line = 48;
+    textTrack.addCue(cue);
+    clearTimeout(removeCueTimer);
+    return removeCueTimer = setTimeout(() => cue &&= (textTrack.removeCue(cue), 0), 800);
   }
   let onMouseDown = e => {
     let $0 = e.button;
@@ -121,6 +108,7 @@ L: {
   let onMouseUp = e =>
     e.button > 2 && (
       e.preventDefault(),
+      e.stopImmediatePropagation(),
       clearTimeout(delayHoldTimer),
       clearInterval(mouseHoldIntervalTimer),
       delayHoldTimer = mouseHoldIntervalTimer = 0
@@ -157,14 +145,18 @@ L: {
         : (
           removeEventListener("mousemove", onMouseMove, 1),
           videoStyle.transformOrigin =
-          videoStyle.cursor = "",
           videoStyle.removeProperty("--x"),
           videoStyle.removeProperty("--y"),
           videoStyle.removeProperty("--z"),
           style.remove(),
           controls && (video.controls = 1),
           scale = 100,
-          video = translateX = translateY = mouseDownInZoom = 0,
+          video =
+          textTrack =
+          cue =
+          translateX =
+          translateY =
+          mouseDownInZoom = 0,
           delete vidcon.vidcon,
           removeEventListener
         )

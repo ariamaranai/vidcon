@@ -140,7 +140,10 @@ L: {
         delayHoldTimer = mouseHoldIntervalTimer = 0,
         !1
       )
-      : (scale < 101 && e.y > border) || (e.stopImmediatePropagation(), !1)
+      : scale < 101 && border < e.y || (
+        e.stopImmediatePropagation(),
+        !1
+      )
   }
   let onClick = e =>
     isMouseMoving &&= (

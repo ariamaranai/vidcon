@@ -70,11 +70,7 @@ L: {
     let $0 = e.deltaY < 0;
     let text =
       e.ctrlKey
-        ? $0
-          ? (videoStyle.setProperty("--z", $0 = (scale += 5) + "%"), $0)
-          : (scale = +scale) < 106
-            ? (videoStyle.removeProperty("--z"), "")
-            : (videoStyle.setProperty("--z", $0 = (scale -= 5) + "%"), $0)
+        ? (videoStyle.setProperty("--z", $0 = $0 ? (scale += 5) + "%" : scale < 106 ? "100%" : (scale -= 5) + "%"), $0)
         : (video.playbackRate =
           $0
             ? ($0 = ((($0 = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? $0 : 5

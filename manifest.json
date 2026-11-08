@@ -4,7 +4,7 @@
   "version": "0",
   "description": "Video controller",
   "icons": {
-    "128": "off.png"
+    "128": "128.png"
   },
   "permissions": [
     "scripting",

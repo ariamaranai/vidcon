@@ -5,11 +5,11 @@ L: {
   let style = d.createElement("style");
   style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:0;--y:0;--z:1;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:var(--z)!important;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:var(--z)!important}";
   let dpr = devicePixelRatio;
-  let cvsBuf = {};
+  let buf = {};
   let cvs = new OffscreenCanvas(dpr * 50, dpr * 16);
   let ctx = cvs.getContext("2d");
   ctx.scale(dpr, dpr);
-  ctx.font = "600 20px bahnschrift";
+  ctx.font = "600+20px bahnschrift";
   ctx.fillStyle = "#fff";
   ctx.textAlign = "center";
   ctx.shadowColor = "#000";
@@ -80,12 +80,12 @@ L: {
             ? ($0 = ((($0 = video.playbackRate) + .055) * 20 ^ 0) / 20) < 5 ? $0 : 5
             : ($0 = ((($0 = video.playbackRate) - .055) * 20 ^ 0) / 20) < .1 ? .1 : $0
         ) + "x";
-    let url = cvsBuf[text];
+    let url = buf[text];
     url
       ? videoStyle.cursor = url
       : (
         ctx.fillText(text, 25, 15),
-        cvs.convertToBlob().then(r => videoStyle.cursor = cvsBuf[text] = "url(" + URL.createObjectURL(r) + ")+0+0,auto")
+        cvs.convertToBlob().then(r => videoStyle.cursor = buf[text] = "url(" + URL.createObjectURL(r) + ")+0+0,auto")
       );
     cursorSwitchTimer && clearTimeout(cursorSwitchTimer);
     cursorSwitchTimer = setTimeout(() => videoStyle.cursor = "", 1000);

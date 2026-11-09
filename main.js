@@ -92,7 +92,7 @@ L: {
       )
       : scale > 100 && border > (mouseDownY = e.y) && (
         mouseDownX = e.x,
-        e.stopImmediatePropagation(),
+        //e.stopImmediatePropagation(),
         addEventListener("mousemove", onMouseMove, mouseDownInZoom = 1)
       );
   }

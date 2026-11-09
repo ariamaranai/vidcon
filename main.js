@@ -3,7 +3,7 @@ L: {
     break L;
   let d = document;
   let style = d.createElement("style");
-  style.textContent = "::-webkit-scrollbar{display:none!important}video{--x:0;--y:0;--z:100;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:calc(var(--z) / 100)!important;transform-origin:center}video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:var(--z)!important}::cue{background-color:#0000!important;font-size:calc(16px / (var(--z) / 100))!important;line-height:2!important}";
+  style.textContent = "::-webkit-scrollbar,video:not([controls]):fullscreen::-webkit-media-controls{display:none!important}video{--x:0;--y:0;--z:100;--h:50vw;--v:50vh;width:100%;translate:calc(var(--x) * 1px) calc(var(--y) * 1px))!important;scale:calc(var(--z) / 100)!important;transform-origin:var(--h) var(--v)!important}video::-webkit-media-controls{translate:calc(var(--x) * -1px),calc(var(--y) * -1px)!important;scale:calc(100 / var(--z))!important;transform-origin:var(--h) var(--v)!important}::cue{background-color:#0000!important;font-size:calc(16px / (var(--z) / 100))!important;line-height:2!important}";
   let video;
   let videoStyle;
   let controls;
@@ -92,7 +92,7 @@ L: {
       )
       : scale > 100 && border > (mouseDownY = e.y) && (
         mouseDownX = e.x,
-        //e.stopImmediatePropagation(),
+        // e.stopImmediatePropagation(),
         addEventListener("mousemove", onMouseMove, mouseDownInZoom = 1)
       );
   }
@@ -100,9 +100,8 @@ L: {
     let factor = 8 / scale;
     videoStyle.setProperty("--x", translateX += (e.x - mouseDownX) * factor);
     videoStyle.setProperty("--y", translateY += (e.y - mouseDownY) * factor);
-    return videoStyle.transformOrigin =
-      (centerX - (translateX >> 1)) + "px " +
-      (centerY - (translateY >> 1)) + "px";
+    videoStyle.setProperty("--h", (centerX - (translateX >> 1)) + "px");
+    return videoStyle.setProperty("--v", (centerY - (translateY >> 1)) + "px");
   }
   let onMouseUp = e =>
     e.button > 2 && (
@@ -147,6 +146,8 @@ L: {
           videoStyle.removeProperty("--x"),
           videoStyle.removeProperty("--y"),
           videoStyle.removeProperty("--z"),
+          videoStyle.removeProperty("--h"),
+          videoStyle.removeProperty("--v"),
           style.remove(),
           controls && (video.controls = 1),
           scale = 100,

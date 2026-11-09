@@ -45,10 +45,10 @@ L: {
   let mouseDownY = 0;
   let translateX = 0;
   let translateY = 0;
-  let centerX = screen.width / 2;
+  let centerX = screen.width >> 1;
   let centerY = screen.height;
   let border = centerY * .8;
-  centerY /= 2;
+  centerY >>= 1;
   let scale = 100;
   let cue;
   let removeCueTimer;
@@ -84,9 +84,9 @@ L: {
         mouseHoldIntervalTimer = 0,
         video.currentTime += ($0 = video.playbackRate * ($0 === 3 ? -5 : 5)),
         delayHoldTimer = setTimeout(() => (
-          video.currentTime += t,
+          video.currentTime += $0,
           mouseHoldIntervalTimer === 0 && (
-            mouseHoldIntervalTimer = setInterval(() => video.currentTime += t, 127)
+            mouseHoldIntervalTimer = setInterval(() => video.currentTime += $0, 127)
           )
         ), 500)
       )
@@ -101,8 +101,8 @@ L: {
     videoStyle.setProperty("--x", translateX += (e.x - mouseDownX) * factor);
     videoStyle.setProperty("--y", translateY += (e.y - mouseDownY) * factor);
     return videoStyle.transformOrigin =
-      (centerX - translateX / 2) + "px " +
-      (centerY - translateY / 2) + "px";
+      (centerX - (translateX >> 1)) + "px " +
+      (centerY - (translateY >> 1)) + "px";
   }
   let onMouseUp = e =>
     e.button > 2 && (

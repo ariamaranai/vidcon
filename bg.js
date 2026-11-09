@@ -7,7 +7,6 @@ onunhandledrejection = e => e.preventDefault();
       t.length && (t = t[0].id) > 0 &&
       scripting.executeScript({
         target: { tabId: t, allFrames: !0 },
-        world: "MAIN",
         files: ["main.js"]
       })
     )
